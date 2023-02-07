@@ -1,4 +1,4 @@
-name: build-fat-image
+name: instrument-and-harden-image
 
 on:
   push:
@@ -19,7 +19,9 @@ jobs:
         name: Instrument the image
         shell: bash
         run: |
-          ~/.slim/bin/slim instrument --stop-grace-period 999s mritunjay394/server-node17-express-yarn-standard:latest
+          ~/.slim/bin/slim instrument \
+          --stop-grace-period 999s  \
+          mritunjay394/server-node17-express-yarn-standard:latest
       -
         name: Run the Image
         shell: bash

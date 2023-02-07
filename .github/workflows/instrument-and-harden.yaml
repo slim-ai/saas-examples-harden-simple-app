@@ -1,9 +1,11 @@
 name: instrument-and-harden-image
 
+# Only trigger, when the build workflow succeeded
 on:
-  push:
-    branches:
-      - "main"
+  workflow_run:
+    workflows: ["build-fat-image"]
+    types:
+      - completed
 
 jobs:
   docker:

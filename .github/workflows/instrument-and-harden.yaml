@@ -24,7 +24,7 @@ jobs:
           ~/.slim/bin/slim --debug instrument \
           --stop-grace-period 999s  \
           --target-image-connector ${{ secrets.SLIM_CONNECTOR_ID }} \
-          mritunjay394/server-node17-express-yarn-standard:latest
+          mritunjay394/node-app:latest
       -
         name: Run the Image
         shell: bash
@@ -32,8 +32,8 @@ jobs:
           docker run -d --rm \
           --user root \
           --cap-add ALL \
-          -p 8088:1300 \
-          --name yarn-instrumented mritunjay394/server-node17-express-yarn-standard:latest-slim-instrumented      
+          -p 8088:80 \
+          --name app-instrumented mritunjay394/node-app:latest-slim-instrumented      
       -
         name: Probe the container
         shell: bash
@@ -43,12 +43,12 @@ jobs:
         name: Stop the instrumented container
         shell: bash
         run: |
-          docker stop -t 999 yarn-instrumented
+          docker stop -t 999 app-instrumented
       -
         name: Harden the instrumented container
         shell: bash
         run: |
-          ~/.slim/bin/slim harden --instrumented-image mritunjay394/server-node17-express-yarn-standard:latest-slim-instrumented
+          ~/.slim/bin/slim harden --instrumented-image mritunjay394/node-app:latest-slim-instrumented
       -
         name: Test the Hardened Image
         shell: bash
@@ -56,8 +56,8 @@ jobs:
           docker run -d --rm \
           --user root \
           --cap-add ALL \
-          -p 8089:1300 \
-          --name yarn-hardened mritunjay394/server-node17-express-yarn-standard:latest-slim-hardened
+          -p 8089:80 \
+          --name app-hardened mritunjay394/node-app:latest-slim-hardened
       -
         name: Probe the hardened container
         shell: bash
@@ -67,5 +67,5 @@ jobs:
         name: Stop the hardened container
         shell: bash
         run: |
-          docker stop yarn-hardened
+          docker stop app-hardened
   

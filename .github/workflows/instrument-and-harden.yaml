@@ -19,7 +19,7 @@ jobs:
         name: Instrument the image
         shell: bash
         run: |
-          ~/.slim/bin/slim instrument \
+          ~/.slim/bin/slim --debug instrument \
           --stop-grace-period 999s  \
           --target-image-connector ${{ secrets.SLIM_CONNECTOR_ID }} \
           mritunjay394/server-node17-express-yarn-standard:latest

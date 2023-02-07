@@ -3,7 +3,7 @@ name: instrument-and-harden-image
 # Only trigger, when the build workflow succeeded
 on:
   workflow_run:
-    workflows: ["build-fat-image"]
+    workflows: ["build-image"]
     types:
       - completed
 
@@ -23,8 +23,7 @@ jobs:
         run: |
           ~/.slim/bin/slim --debug instrument \
           --stop-grace-period 999s  \
-          --target-image-connector ${{ secrets.SLIM_CONNECTOR_ID }} \
-          mritunjay394/node-app:latest
+          ghcr.io/mritunjaysharma394/node-app:latest
       -
         name: Run the Image
         shell: bash
@@ -33,7 +32,7 @@ jobs:
           --user root \
           --cap-add ALL \
           -p 8088:80 \
-          --name app-instrumented mritunjay394/node-app:latest-slim-instrumented      
+          --name app-instrumented ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented      
       -
         name: Probe the container
         shell: bash
@@ -48,7 +47,7 @@ jobs:
         name: Harden the instrumented container
         shell: bash
         run: |
-          ~/.slim/bin/slim harden --instrumented-image mritunjay394/node-app:latest-slim-instrumented
+          ~/.slim/bin/slim harden --instrumented-image ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented
       -
         name: Test the Hardened Image
         shell: bash
@@ -57,7 +56,7 @@ jobs:
           --user root \
           --cap-add ALL \
           -p 8089:80 \
-          --name app-hardened mritunjay394/node-app:latest-slim-hardened
+          --name app-hardened ghcr.io/mritunjaysharma394/node-app:latest-slim-hardened
       -
         name: Probe the hardened container
         shell: bash

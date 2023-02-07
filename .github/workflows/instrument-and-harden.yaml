@@ -21,6 +21,7 @@ jobs:
         run: |
           ~/.slim/bin/slim instrument \
           --stop-grace-period 999s  \
+          --target-image-connector ${{ secrets.SLIM_CONNECTOR_ID }} \
           mritunjay394/server-node17-express-yarn-standard:latest
       -
         name: Run the Image

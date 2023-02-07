@@ -6,4 +6,4 @@ app.get('/', function (req, res) {
     res.send({status: 'success', message: 'Hello World', stack: 'node', stackversion: process.version,framework: 'express', frameworkversion: express.version, packagemanager: "yarn", baseimageversion: "Debian 11 (bullseye)"})
 })
  
-app.listen(1300)
+app.listen(80)

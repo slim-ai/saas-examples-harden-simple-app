@@ -32,7 +32,7 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       -
-        name: Build and push
+        name: Build and push the image
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -40,5 +40,5 @@ jobs:
           push: true
           tags: |
             mritunjay394/node-app:latest
-            ghcr.io/mritunjay394/node-app:latest
+            ghcr.io/mritunjaysharma394/node-app:latest
     

@@ -1,0 +1,66 @@
+name: build-fat-image
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Curl and build Slim SaaS CLI
+        shell: bash
+        run: |
+          curl https://platform.zero.dev.saas.getslim.ai/.service/releases/slim/0.0.7-dev | sh
+          ~/.slim/bin/slim config gen --save --token ${{ secrets.SLIM_TOKEN }}
+      -
+        name: Instrument the image
+        shell: bash
+        run: |
+          ~/.slim/bin/slim instrument --stop-grace-period 999s mritunjay394/server-node17-express-yarn-standard:latest
+      -
+        name: Run the Image
+        shell: bash
+        run: |
+          docker run -d --rm \
+          --user root \
+          --cap-add ALL \
+          -p 8088:1300 \
+          --name yarn-instrumented mritunjay394/server-node17-express-yarn-standard:latest-slim-instrumented      
+      -
+        name: Probe the container
+        shell: bash
+        run: |
+          curl localhost:8088
+      -
+        name: Stop the instrumented container
+        shell: bash
+        run: |
+          docker stop -t 999 yarn-instrumented
+      -
+        name: Harden the instrumented container
+        shell: bash
+        run: |
+          ~/.slim/bin/slim harden --instrumented-image mritunjay394/server-node17-express-yarn-standard:latest-slim-instrumented
+      -
+        name: Test the Hardened Image
+        shell: bash
+        run: |
+          docker run -d --rm \
+          --user root \
+          --cap-add ALL \
+          -p 8089:1300 \
+          --name yarn-hardened mritunjay394/server-node17-express-yarn-standard:latest-slim-hardened
+      -
+        name: Probe the hardened container
+        shell: bash
+        run: |
+          curl localhost:8089
+      -
+        name: Stop the hardened container
+        shell: bash
+        run: |
+          docker stop yarn-hardened
+  

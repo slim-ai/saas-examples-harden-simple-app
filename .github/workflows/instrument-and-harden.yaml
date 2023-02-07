@@ -25,7 +25,7 @@ jobs:
           --stop-grace-period 999s  \
           ghcr.io/mritunjaysharma394/node-app:latest
       -
-        name: Run the Image
+        name: Run the Initial Image
         shell: bash
         run: |
           docker run -d --rm \

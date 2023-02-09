@@ -31,13 +31,13 @@ jobs:
           docker run -d --rm \
           --user root \
           --cap-add ALL \
-          -p 8088:80 \
+          -p 8080:8080 \
           --name app-instrumented ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented      
       -
         name: Probe the container
         shell: bash
         run: |
-          curl localhost:8088
+          curl localhost:8080
       -
         name: Stop the instrumented container
         shell: bash
@@ -55,13 +55,13 @@ jobs:
           docker run -d --rm \
           --user root \
           --cap-add ALL \
-          -p 8089:80 \
+          -p 8081:8080 \
           --name app-hardened ghcr.io/mritunjaysharma394/node-app:latest-slim-hardened
       -
         name: Probe the hardened container
         shell: bash
         run: |
-          curl localhost:8089
+          curl localhost:8081
       -
         name: Stop the hardened container
         shell: bash

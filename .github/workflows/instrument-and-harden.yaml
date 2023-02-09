@@ -8,15 +8,9 @@ on:
       - completed
 
 jobs:
-  instrument:
+  docker:
     runs-on: ubuntu-latest
-    container: ubuntu
     steps:
-      -
-        name: Install Curl
-        shell: bash
-        run: 
-          apt-get update; apt-get install curl -y;
       -
         name: Curl and build Slim SaaS CLI
         shell: bash
@@ -30,71 +24,48 @@ jobs:
           ~/.slim/bin/slim --debug instrument \
           --stop-grace-period 999s  \
           ghcr.io/mritunjaysharma394/node-app:latest
-  probe:
-    needs: instrument
-    runs-on: ubuntu-latest
-    container: 
-     image: ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented
-     ports:
-            # Opens tcp port 8080 on the host and service container
-       - 8080
-    steps:
       -
-        name: Install Curl
-        shell: bash
-        run: 
-          apt-get update; apt-get install curl -y;
-      -
-        name: Probe the container
+        name: Run the Initial Image
         shell: bash
         run: |
-          curl -v localhost:8080
-  harden: 
-    needs: [instrument,probe]
-    runs-on: ubuntu-latest
-    services:
-      # Label used to access the service container
-      app-instrumented:
-        # Container  image
-          image: ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented
-            #
-          ports:
-            # Opens tcp port 8080 on the host and service container
-            - 8080:8080     
-    steps:
+          docker run -d --rm \
+          --user root \
+          --cap-add ALL \
+          -p 8080:8080 \
+          --name app-instrumented ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented 
+          sleep 5s    
+          curl -v localhost:8080 
+      # -
+      #   name: Probe the container
+      #   shell: bash
+      #   run: |
+      #     curl localhost:8080
       -
-        name: Curl and build Slim SaaS CLI
+        name: Stop the instrumented container
         shell: bash
         run: |
-          curl https://platform.zero.dev.saas.getslim.ai/.service/releases/slim/0.0.7-dev | sh
-          ~/.slim/bin/slim config gen --save --token ${{ secrets.SLIM_TOKEN }}
-      -   
+          docker stop -t 999 app-instrumented
+      -
         name: Harden the instrumented container
         shell: bash
         run: |
           ~/.slim/bin/slim harden --instrumented-image ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented
-
-  verify-harden:
-    needs: [instrument, probe, harden]
-    runs-on: ubuntu-latest
-    container: ubuntu
-    services:
-      # Label used to access the service container
-      app-instrumented:
-        # Container  image
-          image: ghcr.io/mritunjaysharma394/node-app:latest-slim-hardened
-            #
-          ports:
-            # Opens tcp port 8080 on the host and service container
-            - 8081:8080     
-    steps:
       -
-        name: Install Curl
-        shell: bash
-        run: 
-          apt-get update; apt-get install curl -y;
-      -
-        name: Probe the container
+        name: Test the Hardened Image
         shell: bash
         run: |
-          curl -v localhost:8081  
+          docker run -d --rm \
+          --user root \
+          --cap-add ALL \
+          -p 8081:8080 \
+          --name app-hardened ghcr.io/mritunjaysharma394/node-app:latest-slim-hardened
+      -
+        name: Probe the hardened container
+        shell: bash
+        run: |
+          curl localhost:8081
+      -
+        name: Stop the hardened container
+        shell: bash
+        run: |
+          docker stop app-hardened

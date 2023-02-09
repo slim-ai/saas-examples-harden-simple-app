@@ -10,17 +10,11 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
-    container: ubuntu
     steps:
-      -
-        name: Install Curl
-        shell: bash
-        run: 
-          apt-get update; apt-get install curl -y;
       -
         name: Curl and build Slim SaaS CLI
         shell: bash
-        run: 
+        run: |
           curl https://platform.zero.dev.saas.getslim.ai/.service/releases/slim/0.0.7-dev | sh
           ~/.slim/bin/slim config gen --save --token ${{ secrets.SLIM_TOKEN }}
       -
@@ -32,13 +26,16 @@ jobs:
           ghcr.io/mritunjaysharma394/node-app:latest
       -
         name: Run the Initial Image
-        shell: bash
-        run: |
-          docker run -d --rm \
-          --user root \
-          --cap-add ALL \
-          -p 8080:8080 \
-          --name app-instrumented ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented      
+        # Service containers to run with `runner-job`
+        services:
+          # Label used to access the service container
+          app-instrumented:
+            # Container  image
+            image: ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented:latest
+            #
+            ports:
+              # Opens tcp port 8080 on the host and service container
+              - 8080:8080     
       -
         name: Probe the container
         shell: bash

@@ -16,7 +16,7 @@ jobs:
         name: Curl and build Slim SaaS CLI
         shell: bash
         run: 
-          apt-get update; apt-get install curl -y
+          apt-get update; apt-get install curl;
           curl https://platform.zero.dev.saas.getslim.ai/.service/releases/slim/0.0.7-dev | sh
           ~/.slim/bin/slim config gen --save --token ${{ secrets.SLIM_TOKEN }}
       -

@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ubuntu
     steps:
-          -
+      -
         name: Install Curl
         shell: bash
         run: 

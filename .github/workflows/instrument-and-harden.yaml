@@ -58,6 +58,7 @@ jobs:
         name: Harden the instrumented container
         shell: bash
         run: |
+          docker pull ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented
           NX_ID=$(docker inspect --format '{{ index .Config.Labels "slim.nx"}}' ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented)
           ~/.slim/bin/slim harden --id $NX_ID
 

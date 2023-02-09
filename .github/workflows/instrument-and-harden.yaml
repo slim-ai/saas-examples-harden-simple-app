@@ -8,7 +8,7 @@ on:
       - completed
 
 jobs:
-  docker:
+  instrument:
     runs-on: ubuntu-latest
     steps:
       -
@@ -25,6 +25,10 @@ jobs:
           --include-path /etc/passwd \
           --stop-grace-period 999s  \
           ghcr.io/mritunjaysharma394/node-app:latest
+  probe:
+    needs: instrument
+    runs-on: ubuntu-latest
+    steps:
       -
         name: Run the Initial Image
         shell: bash
@@ -35,23 +39,32 @@ jobs:
           -p 8080:8080 \
           --name app-instrumented ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented 
           sleep 5s    
-          curl -v localhost:8080 
-      # -
-      #   name: Probe the container
-      #   shell: bash
-      #   run: |
-      #     curl localhost:8080
+          
+      -
+        name: Probe the container
+        shell: bash
+        run: |
+          curl localhost:8080
       -
         name: Stop the instrumented container
         shell: bash
         run: |
           docker stop -t 999 app-instrumented
+  harden: 
+    needs: [instrument,probe]
+    runs-on: ubuntu-latest
+    steps:
       -
         name: Harden the instrumented container
         shell: bash
         run: |
           NX_ID=$(docker inspect --format '{{ index .Config.Labels "slim.nx"}}' ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented)
           ~/.slim/bin/slim harden --id $NX_ID
+
+  verify-harden:
+    needs: [instrument, probe, harden]
+    runs-on: ubuntu-latest
+    steps:
       -
         name: Test the Hardened Image
         shell: bash

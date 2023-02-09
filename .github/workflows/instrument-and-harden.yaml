@@ -37,7 +37,7 @@ jobs:
      image: ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented
      ports:
             # Opens tcp port 8080 on the host and service container
-       - 8080:8080     
+       - 8080
     steps:
       -
         name: Install Curl

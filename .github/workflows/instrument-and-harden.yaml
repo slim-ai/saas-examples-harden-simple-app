@@ -30,15 +30,19 @@ jobs:
           ~/.slim/bin/slim --debug instrument \
           --stop-grace-period 999s  \
           ghcr.io/mritunjaysharma394/node-app:latest
-      -
-        name: Run the Initial Image
-        shell: bash
-        run: |
-          docker run -d --rm \
-          --user root \
-          --cap-add ALL \
-          -p 8080:8080 \
-          --name app-instrumented ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented      
+  probe:
+    needs: docker
+    runs-on: ubuntu-latest
+    services:
+      # Label used to access the service container
+      app-instrumented:
+        # Container  image
+          image: ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented:latest
+            #
+          ports:
+            # Opens tcp port 8080 on the host and service container
+            - 8080:8080     
+    steps:
       -
         name: Probe the container
         shell: bash

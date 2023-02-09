@@ -37,7 +37,7 @@ jobs:
         name: Probe the container
         shell: bash
         run: |
-          curl localhost:8080
+          curl -v localhost:8080
       -
         name: Stop the instrumented container
         shell: bash

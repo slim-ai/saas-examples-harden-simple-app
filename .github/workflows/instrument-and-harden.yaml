@@ -33,7 +33,7 @@ jobs:
   probe:
     needs: instrument
     runs-on: ubuntu-latest
-    container: ubuntu
+    # container: ubuntu
     services:
       # Label used to access the service container
       app-instrumented:
@@ -44,11 +44,11 @@ jobs:
             # Opens tcp port 8080 on the host and service container
             - 8080:8080     
     steps:
-      -
-        name: Install Curl
-        shell: bash
-        run: 
-          apt-get update; apt-get install curl -y;
+      # -
+      #   name: Install Curl
+      #   shell: bash
+      #   run: 
+      #     apt-get update; apt-get install curl -y;
       -
         name: Probe the container
         shell: bash

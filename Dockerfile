@@ -2,9 +2,9 @@ FROM node:17
 
 USER node
 
-ADD service /service
-
 WORKDIR /service
+
+COPY --chown=node . .
 
 RUN yarn install
 

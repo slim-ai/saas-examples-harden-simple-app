@@ -22,6 +22,7 @@ jobs:
         shell: bash
         run: |
           ~/.slim/bin/slim --debug instrument \
+          --include-path /etc/passwd \
           --stop-grace-period 999s  \
           ghcr.io/mritunjaysharma394/node-app:latest
       -

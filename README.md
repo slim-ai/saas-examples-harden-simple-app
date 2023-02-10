@@ -1,19 +1,31 @@
-# Hardening Docker Workloads using Slim CLI
+# Primer: Node.js Application Hardening
 
-## The Problem and the Magic 🪄
-Hello folks and if you are reading this, you might have already flashed a gaze at the picture below but before we come to that, let's take a look at the repository and it basically consists of just a simple (but huge) node app and a Dockerfile majorly. Now let's come back to the image (pun intended ofcourse) below again. The left side is what how the original image of our node app looks like and as visible, its huge 995 MB. Now what if we say that you can get the same app's hardened image with size minified to just 89 MB and vulnerabilites reduced by 99.67% and that too in just few simple steps? Sounds magical right? Well, so says the image on your right and that's the magic we are going to talk about today! 
+## The Problem and the Solution 
+
+Creating high-quality container images is hard. How to choose an optimal base image? How to configure a multistage build to make the end slim? How to keep the vulnerability scanners calm? One must be a true container expert to get it right. However, there might be an alternative way.
+
+**Automated container image hardening**
+
+* Build an image FROM your favorite base.
+* Instrument the image with our sensors.
+* Run an instrumented container "probing" its functionality.
+* Build a hardened version of the image using collected intelligence.
 
 ![image](https://user-images.githubusercontent.com/45476902/218093055-50a44810-db1a-43fd-a71d-909e521d4a55.png)
 
 
 ### Prerequisites
-* A fresh version of the Slim CLI is installed and configured as described on this [portal](https://portal.slim.dev/cli)
+* A fresh version of the Slim CLI [installed and configured](https://portal.slim.dev/cli)
 
-* Connector configured with Slim SaaS that will help you get your target image
+* [A container registry connector configured](https://portal.slim.dev/connectors)
 
 * Docker (Engine or Desktop) is installed locally.
 
 ### Demo
+
+Before we move to the steps, let's visualise with this great image from [Ivan](https://github.com/iximiuz) on how the flow looks like!
+![image](https://user-images.githubusercontent.com/45476902/218159028-d2b21334-bfeb-45dd-8d2d-725fbe3d3520.png)
+
 
 #### Step 1: Instrument  🕵️
 
@@ -96,4 +108,4 @@ $ docker stop app-hardened
 Hurray, so you learnt the magic to harden your image quick right? It's time for celebration🍾
 
 But wait, want too see all these steps in Actions? (Oh, we love puns!) So what are you waiting for?
-Check out how it is implemented in the workflow of the GitHub actions and how you can implement the same in your CI/CD! 
+Check out how it is implemented in the [workflow of the GitHub actions](https://github.com/mritunjaysharma394/ich-examples/actions) and how you can implement the same in your CI/CD! 

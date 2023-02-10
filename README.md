@@ -2,7 +2,11 @@
 
 ## The Problem and the Solution 
 
-Creating high-quality container images is hard. How to choose an optimal base image? How to configure a multistage build to make the end slim? How to keep the vulnerability scanners calm? One must be a true container expert to get it right. However, there might be an alternative way.
+Creating high-quality container images is hard. How to choose an optimal base image? 
+How to configure a multistage build to make the end image slim? 
+How to keep the vulnerability scanners calm? 
+One must be a true container expert to get it right. 
+However, there might be an alternative way.
 
 **Automated container image hardening**
 
@@ -19,17 +23,17 @@ Creating high-quality container images is hard. How to choose an optimal base im
 
 * [A container registry connector configured](https://portal.slim.dev/connectors)
 
-* Docker (Engine or Desktop) is installed locally.
+* An ability to run the instrumented image (e.g., using Docker or Kubernetes)
 
 ### Demo
 
-Before we move to the steps, let's visualise with this great image from [Ivan](https://github.com/iximiuz) on how the flow looks like!
+Before we move to the steps, let's visualise how the flow looks like!
 ![image](https://user-images.githubusercontent.com/45476902/218159028-d2b21334-bfeb-45dd-8d2d-725fbe3d3520.png)
 
 
 #### Step 1: Instrument  🕵️
 
-The first step involves instrumenting the image and simply speaking it means that the Slim engine's sensor is going to act like an intelligence agent (the Container's James Bond) to collect data for the further probe  🕵️
+The first step involves instrumenting the image and simply speaking it means that the Slim engine's sensor is going to act like an intelligence agent to collect data for the further probe  🕵️
 
 
 ```sh
@@ -41,11 +45,10 @@ $ slim instrument \
 
 **NOTE**: Make sure the instrumented image, in our case, `ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented` is available through the connector.
 
-> Sometimes, the slim instrument command fails to find the target image even when it’s visible on the user portal. It is caused by the suboptimal heuristic that we use to map an image to a connector. You can mitigate it by explicitly specifying the connector ID using the --target-image-connector, --instrumented-image-connector, and --hardened-image-connector flags. The correspond connector ID can be copied from the connector editing page on the portal.
-
 #### Step 2: Profile/probe/test  🔎
 
-Now that we have our agent aka sensor in the target's territory, its time to implement the mission! That is let the container run using the instrumented image and get all the important data to harden it and reduce the vulnerablities in next step. 😎
+Now that we have our agent aka sensor in the target's territory, its time to implement the mission! 
+That is let the container run using the instrumented image and get all the important data to harden it and reduce the vulnerablities in next step. 😎
  
 Make sure you use the root user and give it ALL capabilities (notice that this is a requirement only for the instrumented containers - hardened containers won’t need any extra permissions):
 * Run the container: 
@@ -69,7 +72,8 @@ $ docker stop -t 999 app-instrumented
 ```
 #### Step 3: Hardening  🔨
 
-Good job so far by the agent! Now that we have the data via automatically submitted reports, let's harden the target image and bring down its vulnerabilites and size 🚀:
+Good job so far by the agent! 
+Now that we have the data via automatically submitted reports, let's harden the target image and bring down its vulnerabilites and size 🚀:
 
 * Let's get the NX ID
 
@@ -105,7 +109,8 @@ $ curl localhost:8081
 $ docker stop app-hardened
 ```
 ### Time for Actions
-Hurray, so you learnt the magic to harden your image quick right? It's time for celebration🍾
+Hurray, so you learnt the magic to harden your image quick right? 
+It's time for celebration🍾
 
 But wait, want too see all these steps in Actions? (Oh, we love puns!) So what are you waiting for?
 Check out how it is implemented in the [workflow of the GitHub actions](https://github.com/mritunjaysharma394/ich-examples/actions) and how you can implement the same in your CI/CD! 

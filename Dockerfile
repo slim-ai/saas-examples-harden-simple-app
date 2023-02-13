@@ -2,7 +2,7 @@ FROM node:18
 
 WORKDIR /service
 
-COPY --chown=node:node . .
+COPY . .
 
 RUN chown -R node:node /service
 

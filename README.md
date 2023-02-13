@@ -1,4 +1,11 @@
-# Primer: Node.js Application Hardening
+# Primer: a Node.js Application Hardening
+
+The repository includes:
+
+- A simple server application written in Node.js.
+- A typical Dockerfile to containerize it.
+- A workflow to build and push the (pretty big) image.
+- A workflow to _harden_ that image.
 
 ## The Problem and the Solution 
 

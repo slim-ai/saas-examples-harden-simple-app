@@ -1,0 +1,36 @@
+name: slimctl
+description: Install and configure the slimctl CLI. See https://portal.slim.dev/cli for more.
+inputs:
+  token:
+    description: |
+      The Slim API access token. See https://portal.slim.dev/settings#tokens for more.
+    required: true
+    type: string
+  org:
+    description: |
+      An optional Slim Portal Organization ID if the account associated with
+      the API token has more than one. Find the list of organizations on
+      https://portal.slim.dev/settings#organizations.
+    type: string
+  version:
+    description: The slimctl CLI version.
+    default: latest
+    type: string
+
+runs:
+  using: composite
+  steps:
+    - name: Install the slimctl CLI
+      shell: bash
+      run: |
+        curl https://platform.slim.dev/.service/releases/slim/${{ inputs.version }} | sh
+        echo "${HOME}/.slim/bin" >> $GITHUB_PATH
+  
+    - name: Configure the slimctl CLI
+      shell: bash
+      run: |
+        if [ -z "${{ inputs.org }}" ]; then
+          slim config gen --save --token ${{ inputs.token }}
+        else
+          slim config gen --save --token ${{ inputs.token }} --org ${{ inputs.org }}
+        fi

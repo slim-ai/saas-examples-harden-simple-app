@@ -1,3 +1,8 @@
+# A very typical "build" workflow that produces a container
+# image every time a commit is merged into the main branch:
+#  - docker login
+#  - docker build .
+#  - docker push
 name: build
 
 on:
@@ -5,40 +10,40 @@ on:
     branches:
       - "main"
 
+env:
+  # The image to be build. E.g: ghcr.io/saas-examples-harden-simple-app:9ce...6b
+  IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
+
 jobs:
-  docker:
+  build:
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ env.IMAGE }}
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v3
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      -
-        name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      -
-        name: Login to GitHub Container Registry
+
+      - name: Login to Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      -
-        name: Build and push the image
+
+      - name: Build and push the image
         uses: docker/build-push-action@v4
         with:
           context: .
           platforms: linux/amd64
+          tags: ${{ env.IMAGE }}
           push: true
-          tags: |
-            mritunjay394/node-app:latest
-            ghcr.io/mritunjaysharma394/node-app:latest
-    
+
+  # When the build is done (i.e. the image is already pushed to the registry),
+  # the "harden" workflow kicks in. It'll take the unoptimized image produced
+  # by the "build" workflow and will create an optimized (aka "hardened") version of it.
+  harden:
+    needs: build
+    uses: ./.github/workflows/harden.yaml
+    secrets: inherit
+    with:
+      image: ${{ needs.build.outputs.image }}

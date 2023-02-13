@@ -1,94 +1,148 @@
+# A workflow to "harden" the image that was build on the previous stage.
+# It expects an (unoptimized) version of the image to already exist in the registry.
+#
+# The current workflow:
+#  - Installs slimctl.
+#  - Instruments the "target" image.
+#  - Starts an instrumented container and "probes" it.
+#  - Builds a hardened version of the image using application
+#    intelligence collected during the probe step.
 name: harden
 
-# Only trigger, when the build workflow succeeded
 on:
-  workflow_run:
-    workflows: ["build"]
-    types:
-      - completed
+  workflow_call:
+    inputs:
+      # The image to be hardened (aka "target" image).
+      image:
+        required: true
+        type: string
 
+# Using different jobs for every hardening stage to show that
+# there is no dependency by local data. All the interactions
+# between the stages happen either through the Slim.AI API or
+# the container registry.
 jobs:
+
+  # The Instrument stage: Build an image FROM the target image by
+  #                       adding Slim sensors into i.
   instrument:
     runs-on: ubuntu-latest
-    steps:
-      -
-        name: Curl and build Slim SaaS CLI
-        shell: bash
-        run: |
-          curl https://platform.zero.dev.saas.getslim.ai/.service/releases/slim/0.0.7-dev | sh
-          ~/.slim/bin/slim config gen --save --token ${{ secrets.SLIM_TOKEN }}
-      -
-        name: Instrument the image
-        shell: bash
-        run: |
-          ~/.slim/bin/slim --debug instrument \
-          --include-path /etc/passwd \
-          --stop-grace-period 999s  \
-          ghcr.io/mritunjaysharma394/node-app:latest
-  probe:
-    needs: instrument
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Run the Initial Image
-        shell: bash
-        run: |
-          docker run -d --rm \
-          --user root \
-          --cap-add ALL \
-          -p 8080:8080 \
-          --name app-instrumented ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented 
-          sleep 5s    
-          
-      -
-        name: Probe the container
-        shell: bash
-        run: |
-          curl localhost:8080
-      -
-        name: Stop the instrumented container
-        shell: bash
-        run: |
-          docker stop -t 999 app-instrumented
-  harden: 
-    needs: [instrument,probe]
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Curl and build Slim SaaS CLI
-        shell: bash
-        run: |
-          curl https://platform.zero.dev.saas.getslim.ai/.service/releases/slim/0.0.7-dev | sh
-          ~/.slim/bin/slim config gen --save --token ${{ secrets.SLIM_TOKEN }}
-      -
-        name: Harden the instrumented container
-        shell: bash
-        run: |
-          docker pull ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented
-          NX_ID=$(docker inspect --format '{{ index .Config.Labels "slim.nx"}}' ghcr.io/mritunjaysharma394/node-app:latest-slim-instrumented)
-          ~/.slim/bin/slim harden --id $NX_ID
+    env:
+      INST_IMAGE: ${{ inputs.image }}-slim-inst
+      HARD_IMAGE: ${{ inputs.image }}-slim-hard
+    outputs:
+      # A hardening "attempt" ID (will be needed on the Harden stage).
+      inst-id: ${{ steps.instrument.outputs.inst-id }}
 
-  verify-harden:
-    needs: [instrument, probe, harden]
-    runs-on: ubuntu-latest
+      # The (temporary) Instrumented image name. Will be needed on the
+      # Probe stage.
+      inst-image: ${{ env.INST_IMAGE }}
+
+      # The (final) Hardened image name. This is the main artifact produced
+      # by this workflow. Will be needed during the Verify stage and in a
+      # hypothetical "deploy" workflow (not a part of this example).
+      hard-image: ${{ env.HARD_IMAGE }}
     steps:
-      -
-        name: Test the Hardened Image
-        shell: bash
+      # TMP WORKAROUND: Until the slimctl action is published.
+      - uses: actions/checkout@v3
+
+      # Install and configure the slimctl CLI.
+      - uses: ./.github/actions/slimctl
+        with:
+          token: ${{ secrets.SLIM_TOKEN }}
+
+      # Build the Instrumented image. When the instrument command is done,
+      # the instrumented image will be available in the registry.
+      #
+      # A few optional but handy flags to be aware of:
+      # 
+      # --include-path allows to keep some folders always included in the Hardened Image.
+      # --stop-grace-period gives the sensor enough space to finish its job before exiting
+      #                     (when the default 5 seconds is not enough).
+      # 
+      # Also, note the "attempt" ID generation.
+      - name: Instrument the target image
+        id: instrument
         run: |
-          docker run -d --rm \
-          --user root \
-          --cap-add ALL \
-          -p 8081:8080 \
-          --name app-hardened ghcr.io/mritunjaysharma394/node-app:latest-slim-hardened
-          sleep 5s
-      -
-        name: Probe the hardened container
-        shell: bash
+          INST_ID=$(slim instrument \
+            --instrumented-image ${INST_IMAGE} \
+            --hardened-image ${HARD_IMAGE} \
+            --include-path /service \
+            --stop-grace-period 30s \
+            ${{ inputs.image }})
+          echo "inst-id=${INST_ID}" >> $GITHUB_OUTPUT
+
+  # The Probe stage: Start a container using the Instrumented image
+  #                  and try using it to let the Slim sensors observe
+  #                  the application running.
+  probe:
+    runs-on: ubuntu-latest
+    needs: instrument
+    steps:
+      # Starting a new container using the Instrumented image.
+      # Note the extra `--user root` and `--cap-add ALL` flags.
+      # They are needed for the Slim sensors.
+      - name: Start an Instrumented Container
         run: |
-          curl localhost:8081
-      -
-        name: Stop the hardened container
-        shell: bash
+          docker run -d -p 8080:8080 --name app-inst \
+            --user root \
+            --cap-add ALL \
+            ${{ needs.instrument.outputs.inst-image }}
+
+      # Try using the Instrumented Container.
+      - name: Probe the Instrumented Container
         run: |
-          docker stop app-hardened
+          for i in 1 2 3 4 5; do
+            curl -v --fail http://localhost:8080 && echo "OK" && break
+            [ "$i" = "5" ] && echo "FAIL" && exit 1
+            sleep 5
+          done
+
+      # Stop the Instrumented Container GRACEFULLY by sending it SIGTERM
+      # and giving enough time to exit.
+      - name: Stop the Instrumented Container
+        run: |
+          docker stop -t 30 app-inst
+
+  # The Harden stage: Build a hardened version of the image using the reports
+  #                   collected on the previous stage.
+  harden:
+    runs-on: ubuntu-latest
+    needs: [instrument, probe]
+    steps:
+      # TMP WORKAROUND: Until the slimctl action is published.
+      - uses: actions/checkout@v3
+
+      - uses: ./.github/actions/slimctl
+        with:
+          token: ${{ secrets.SLIM_TOKEN }}
+
+      # The harden command needs to be provided with the ID obtained on
+      # the Instrument phase. When the harden command is done, the Hardened
+      # Image should be available in the registry.
+      - name: Harden the Target Image
+        run: |
+          slim harden --id ${{ needs.instrument.outputs.inst-id }}
+
+  # The (optional) Verify stage: Run a container using the Hardened Image
+  #                              and see if it's actually functional.
+  verify:
+    runs-on: ubuntu-latest
+    needs: [instrument, probe, harden]
+    steps:
+      - name: Start a Hardened Container
+        run: |
+          docker run -d -p 8080:8080 --name app-hard \
+            ${{ needs.instrument.outputs.hard-image }}
+
+      - name: Test the Hardened Container
+        run: |
+          for i in 1 2 3 4 5; do
+            curl -v --fail http://localhost:8080 && echo "OK" && break
+            [ "$i" = "5" ] && echo "FAIL" && exit 1
+            sleep 5
+          done
+
+      - name: Stop the Hardened Container
+        run: |
+          docker stop app-hard

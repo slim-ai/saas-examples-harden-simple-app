@@ -1,5 +1,7 @@
 FROM node:18
 
+LABEL org.opencontainers.image.source=https://github.com/slim-ai/saas-examples-harden-simple-app
+
 WORKDIR /service
 
 COPY . .

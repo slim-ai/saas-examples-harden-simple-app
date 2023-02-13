@@ -1,9 +1,9 @@
-name: instrument-and-harden-image
+name: harden
 
 # Only trigger, when the build workflow succeeded
 on:
   workflow_run:
-    workflows: ["build-image"]
+    workflows: ["build"]
     types:
       - completed
 

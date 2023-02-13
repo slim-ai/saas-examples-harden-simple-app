@@ -1,13 +1,15 @@
-FROM node:17
-
-USER node
+FROM node:18
 
 WORKDIR /service
 
-COPY --chown=node . .
+COPY . .
+
+RUN chown -R node:node /service
 
 RUN yarn install
 
 EXPOSE 8080
+
+USER node
 
 ENTRYPOINT [ "node", "server.js" ]

@@ -13,7 +13,7 @@ You can explore the repository, then clone it, and adapt it for your use cases.
 
 ## The Problem and the Solution 
 
-Creating high-quality container images is not an easy task.
+Creating high-quality container images is no easy task.
 How to choose an optimal base image? 
 How to configure a multistage build to make the end image slim? 
 How to keep the vulnerability scanners calm? 

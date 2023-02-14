@@ -14,41 +14,44 @@ You can explore the repository, then clone it, and adapt it for your use cases.
 ## The Problem and the Solution 
 
 Creating high-quality container images is no easy task.
-How to choose an optimal base image? 
-How to configure a multistage build to make the end image slim? 
-How to keep the vulnerability scanners calm? 
+How do you choose an optimal base image? 
+How do you configure a multistage build to make the end image slim? 
+How do you keep remove vulnerabilities from your images? 
 One must be a true container expert to get it right. 
-However, there might be an alternative way.
 
-**Automated container image hardening**
+However, there is another way.
+
+**Automated Container Image Hardening from Slim.AI**
+With Slim.AI, you can: 
 
 * Build an image FROM your favorite base.
-* Instrument the image with Slim sensors.
-* Run an instrumented container "probing" its functionality.
-* Build a hardened version of the image using collected intelligence.
+* Instrument the image with the Slim Sensor.
+* Run tests against the instrumented container and collect intelligence about what it needs to run.
+* Build a hardened version of the image using that intelligence.
 
-![image](https://user-images.githubusercontent.com/45476902/218093055-50a44810-db1a-43fd-a71d-909e521d4a55.png)
+![Results from Container Image Hardening](https://user-images.githubusercontent.com/45476902/218093055-50a44810-db1a-43fd-a71d-909e521d4a55.png)
 
-## Demo: Hardening a container image using Slim CLI
+## Hardening a container image using the Slim CLI
 
 ### Prerequisites
+To complete this tutorial, you will need: 
 
-* A fresh version of the Slim CLI [installed and configured](https://portal.slim.dev/cli)
+* A fresh version of the Slim CLI installed and configured [link](https://portal.slim.dev/cli) / [docs]()
 
-* [A container registry connector configured](https://portal.slim.dev/connectors)
+* A container registry connector configured via the Slim SaaS [link](https://portal.slim.dev/connectors) / [docs](https://www.slim.ai/docs/connectors) 
 
-* An ability to run the instrumented image (e.g., using Docker or Kubernetes)
+* The ability to run the instrumented image (e.g., using Docker or Kubernetes)
 
 ### What & How
 
 Before we move to the steps, let's see how the flow can be visualized:
 
-![image](https://user-images.githubusercontent.com/45476902/218159028-d2b21334-bfeb-45dd-8d2d-725fbe3d3520.png)
+![Diagram of the Hardening Process](https://user-images.githubusercontent.com/45476902/218159028-d2b21334-bfeb-45dd-8d2d-725fbe3d3520.png)
 
 
 #### Step 1: Instrument  🕵️
 
-The first step involves instrumenting the image and simply speaking it means that the Slim engine's sensor is going to act like an intelligence agent to collect data for the further probe  🕵️
+The first step involves instrumenting the image and simply speaking it means that the Slim Sensor is going to act like an intelligence agent to collect data for the further probe.
 
 ```sh
 $ slim instrument \
@@ -56,17 +59,17 @@ $ slim instrument \
   --stop-grace-period 30s  \
    ghcr.io/slim-ai/saas-examples-harden-simple-app:latest
 ...
-rknx.2LkF7SjT3M0YbaXAMTjWgGm8zQN  # Instrumentation "attempt ID", you'll need it later.
+rknx.2LkF7SjT3M0YbaXAMTjWgGm8zQN  # Instrumentation "attempt ID". Save this: you'll need it later.
 ```
 
 **NOTE**: Make sure the instrumented image, in our case, `ghcr.io/slim-ai/saas-examples-harden-simple-app:latest` is available through the connector.
 
-#### Step 2: Probe (_aka_ profile, _aka_ test)  🔎
+#### Step 2: Observe (_aka_ profile, _aka_ test)  🔎
 
-Now that we have our agent aka sensor in the target's territory, its time to implement the mission! 
-That is let the container run using the instrumented image and get all the important data to harden it and reduce the vulnerabilities in next step. 😎
+Now that we have our agent (aka, the Slim Sensor) in the target container, it is time to implement the mission! 
+That is, run the newly instrumented image and get all the important data Slim will need harden it. 😎
  
-Make sure you use the root user and give it ALL capabilities (notice that this is a requirement only for the instrumented containers - hardened containers won’t need any extra permissions):
+Make sure you use the `root` user and give the container ALL capabilities via the Docker run command. **NOTE:** This is required only for the instrumented container. Hardened containers won’t need any extra permissions. 
 
 * Run the container: 
 
@@ -77,13 +80,15 @@ Make sure you use the root user and give it ALL capabilities (notice that this i
    ghcr.io/slim-ai/saas-examples-harden-simple-app:latest-slim-instrumented 
 ```
 
-* “Probe” the instrumented container:
+* “Test" the instrumented container. In the case of this simple app, merely running a curl against the running container will suffice. 
 
 ```sh
 $ curl localhost:8080
 ```
 
-* Stop the container gracefully giving the sensor(s) enough time to finalize and submit the reports:
+By running curl, we see that the Node web app returns a response. Under the hood, the Slim Sensor observes the running container and collects intelligence about the required libraries, files, and binaries. 
+
+* Stop the container gracefully, giving the sensor(s) enough time to finalize and submit the reports. **Note:** Failure to stop the container gracefully may result in a failed hardening process. 
 
 
 ```sh
@@ -92,7 +97,7 @@ $ docker stop -t 30 app-inst
 
 #### Step 3: Harden  🔨
 
-Now that we have the data via automatically submitted reports, let's harden the target image and bring down its vulnerabilities and size 🚀:
+Now that we have the data via automatically submitted reports, let's harden the target image, removing any unnecessary components and thus reducing the total number of vulnerabilities, removing attack surface, and making it smaller. 
 
 Harden using the ID obtained on the **Instrument** step:
 

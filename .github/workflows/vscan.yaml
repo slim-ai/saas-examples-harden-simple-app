@@ -16,7 +16,7 @@ on:
         type: string
 
 jobs:
-  vulnerability-scan-report:
+  vulnerability-scan:
     runs-on: ubuntu-latest
     steps:
       # TMP WORKAROUND: Until the slimctl action is published.

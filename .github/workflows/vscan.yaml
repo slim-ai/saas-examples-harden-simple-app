@@ -1,0 +1,42 @@
+# A workflow to create the Vulnerability Scan Report of the input image 
+# that may be (unoptimized) version of the image initally built
+# or the hardened image.
+#
+# The current workflow:
+#  - Installs slimctl.
+#  - Creates the Vulnerability Scan Report of the input image
+
+name: vulnerability-scan
+on:
+  workflow_call:
+    inputs:
+      # The image whose Vulnerability scan report will be created.
+      image:
+        required: true
+        type: string
+
+jobs:
+  vulnerability-scan:
+    runs-on: ubuntu-latest
+    steps:
+      # TMP WORKAROUND: Until the slimctl action is published.
+      - uses: actions/checkout@v3
+
+      # Install and configure the slimctl CLI.
+      - uses: ./.github/actions/slimctl
+        with:
+          token: ${{ secrets.SLIM_TOKEN }}
+
+      # Creates Vulnerability Scan Report for the input Image and upload
+      # it as artifacts.          
+      - name: Trigger multi-scanner pass for the Image (using the Slim.AI infrastructure)
+        run: |
+          export IMAGE=${{ inputs.image }}
+          NX_ID=$(slim workflows run --no-cache --image ${IMAGE} --gen-defn-for vscan 2>/dev/null | jq -r '.["vscan-simple"].id')
+          slim workflows get-result-report --id ${NX_ID} 2>/dev/null | jq . > report.txt
+      - name: Save the Vulnerability Scanning results as an artifact for future reference.
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.image }}-vuln-scan-report
+          path: report.txt
+          retention-days: 7

@@ -154,5 +154,5 @@ jobs:
     uses: ./.github/workflows/vscan.yaml
     secrets: inherit
     with:
-      image: ${{ inputs.image }}-slim-hardened
+      image: ${{ inputs.image }}-slim-hard
       name: hardened-image-vuln-scan-report

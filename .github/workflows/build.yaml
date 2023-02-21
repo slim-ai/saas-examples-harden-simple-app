@@ -51,9 +51,9 @@ jobs:
 
   # The (optional) callable workflow to create the Vulnerability Scan Report 
   # of the unoptimized image produced by the "build" workflow. 
-  vulnerability-scan:
+  scan:
     needs: build
-    uses: ./.github/workflows/vscan.yaml
+    uses: ./.github/workflows/scan.yaml
     secrets: inherit
     with:
       image: ${{ needs.build.outputs.image }}

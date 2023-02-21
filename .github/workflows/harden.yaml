@@ -149,9 +149,9 @@ jobs:
 
   # The (optional) callable workflow to create the Vulnerability Scan Report 
   # of the hardened image 
-  vulnerability-scan:
+  scan:
     needs: harden
-    uses: ./.github/workflows/vscan.yaml
+    uses: ./.github/workflows/scan.yaml
     secrets: inherit
     with:
       image: ${{ inputs.image }}-slim-hard

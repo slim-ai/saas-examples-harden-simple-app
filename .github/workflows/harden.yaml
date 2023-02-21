@@ -147,8 +147,8 @@ jobs:
         run: |
           docker stop app-hard
 
-# The (optional) callable workflow to create the Vulnerability Scan Report 
-# of the hardened image 
+  # The (optional) callable workflow to create the Vulnerability Scan Report 
+  # of the hardened image 
   vulnerability-scan:
     needs: harden
     uses: ./.github/workflows/vscan.yaml

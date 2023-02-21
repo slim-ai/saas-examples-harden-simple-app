@@ -155,3 +155,4 @@ jobs:
     secrets: inherit
     with:
       image: ${{ needs.instrument.outputs.hard-image }}
+      name: hardened-image-vuln-scan-report

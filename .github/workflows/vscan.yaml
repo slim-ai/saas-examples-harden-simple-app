@@ -14,6 +14,10 @@ on:
       image:
         required: true
         type: string
+      # The name of the Vulnerability scan report artifact.
+      name:
+        required: true
+        type: string
 
 jobs:
   vulnerability-scan:
@@ -37,6 +41,6 @@ jobs:
       - name: Save the Vulnerability Scanning results as an artifact for future reference.
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.image }}-vuln-scan-report
+          name: ${{ inputs.name }}
           path: report.txt
           retention-days: 7

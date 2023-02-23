@@ -102,6 +102,7 @@ jobs:
       # and giving enough time to exit.
       - name: Stop the Instrumented Container
         run: |
+          docker logs -f app-inst &
           docker stop -t 30 app-inst
 
   # The Harden stage: Build a hardened version of the image using the reports

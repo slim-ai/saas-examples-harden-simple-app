@@ -36,8 +36,8 @@ jobs:
       - name: Trigger multi-scanner pass for the Image (using the Slim.AI infrastructure)
         run: |
           export IMAGE=${{ inputs.image }}
-          NX_ID=$(slim workflows run --no-cache --image ${IMAGE} --gen-defn-for vscan 2>/dev/null | jq -r '.["vscan-simple"].id')
-          slim workflows get-result-report --id ${NX_ID} 2>/dev/null | jq . > report.txt
+          NX_ID=$(slim workflows run --no-cache --image ${IMAGE} --gen-defn-for vscan | jq -r '.["vscan-simple"].id')
+          slim workflows get-result-report --id ${NX_ID} | jq . > report.txt
       - name: Save the Vulnerability Scanning results as an artifact for future reference.
         uses: actions/upload-artifact@v3
         with:
